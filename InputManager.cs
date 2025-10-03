@@ -21,9 +21,14 @@ namespace GameDevGame2
 		public Vector2 Direction { get; private set; }
 
 		/// <summary>
-		/// If the warp functionality has been requested
+		/// If the swat functionality has been requested
 		/// </summary>
 		public bool Swat { get; private set; } = false;
+
+		/// <summary>
+		/// If the play functionality has been requested
+		/// </summary>
+		public bool Play { get; private set; } = false;
 
 		/// <summary>
 		/// If the user has requested the game end 
@@ -67,15 +72,20 @@ namespace GameDevGame2
 
 			#region Swat Input
 			Swat = false;
-			if (currentKeyboardState.IsKeyDown(Keys.Space) &&
-				priorKeyboardState.IsKeyUp(Keys.Space))
-			{
-				Swat = true;
-			}
 			if (currentMouseState.LeftButton == ButtonState.Pressed &&
 				priorMouseState.LeftButton == ButtonState.Released)
 			{
 				Swat = true;
+			}
+
+			#endregion
+
+			#region Play Input
+			Play = false;
+			if (currentKeyboardState.IsKeyDown(Keys.Space) &&
+				priorKeyboardState.IsKeyUp(Keys.Space))
+			{
+				Play = true;
 			}
 
 			#endregion

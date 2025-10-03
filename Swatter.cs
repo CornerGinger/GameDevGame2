@@ -1,10 +1,12 @@
 ﻿using GameDevGame1.Collisions;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +18,7 @@ namespace GameDevGame2
 		private double animationTimer;
 		private short animationFrame;
 		private BoundingRectangle bounds = new BoundingRectangle(new Vector2(200 - 32, 200 - 32), 64, 32);
+		private SoundEffect swat;
 
 
 		/// <summary>

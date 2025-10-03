@@ -1,11 +1,19 @@
 ﻿using GameDevGame1;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 
 namespace GameDevGame2
 {
+	public enum ScreenState
+	{
+		Title,
+		HowToPlay,
+		Game
+	}
     public class FlySwatters : Game
     {
 		private GraphicsDeviceManager graphics;
@@ -13,7 +21,13 @@ namespace GameDevGame2
 		private FlySprite[] flies;
 		private Swatter swatter;
 		private InputManager inputManager;
+		private SoundEffect flyHit;
+		private SoundEffect swat;
+		private Song backgroundMusic;
+		private SpriteFont spriteFont;
 		private int fliesLeft;
+		private ScreenState curScreen = ScreenState.Title;
+		private double instructTimer = 0;
 		public FlySwatters()
 		{
 			graphics = new GraphicsDeviceManager(this);
@@ -46,7 +60,12 @@ namespace GameDevGame2
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 			foreach (var fly in flies) fly.LoadContent(Content);
 			swatter.LoadContent(Content);
-
+			flyHit = Content.Load<SoundEffect>("Boom3");
+			backgroundMusic = Content.Load<Song>("FIGHTING");
+			spriteFont = Content.Load<SpriteFont>("AgencyFB");
+			MediaPlayer.IsRepeating = true;
+			MediaPlayer.Volume = 0.7f;
+			MediaPlayer.Play(backgroundMusic);
 			// TODO: use this.Content to load your game content here
 		}
 
@@ -58,17 +77,47 @@ namespace GameDevGame2
 			inputManager.Update(gameTime);
 			if (inputManager.Exit) Exit();
 
-			foreach (var fly in flies) fly.Update(gameTime, graphics);
-			swatter.Update(gameTime, inputManager);
-			swatter.Color = Color.White;
-			foreach (var fly in flies)
+			switch (curScreen)
 			{
-				if (!fly.Dead && inputManager.Swat && fly.Bounds.CollidesWith(swatter.Bounds))
-				{
-					swatter.Color = Color.Red;
-					fly.Dead = true;
-					fliesLeft--;
-				}
+				case ScreenState.Title:
+					if (inputManager.Play)
+					{
+						curScreen = ScreenState.HowToPlay;
+						instructTimer = 0;
+					}
+					break;
+				case ScreenState.HowToPlay:
+					instructTimer += gameTime.ElapsedGameTime.TotalSeconds;
+					if (instructTimer > 2.0)
+					{
+						curScreen = ScreenState.Game;
+					}
+					break;
+				case ScreenState.Game:
+					foreach (var fly in flies) fly.Update(gameTime, graphics);
+					swatter.Update(gameTime, inputManager);
+					swatter.Color = Color.White;
+					if (inputManager.Swat)
+					{
+						swat = Content.Load<SoundEffect>("Hit6");
+						foreach (var fly in flies)
+						{
+							if (!fly.Dead && fly.Bounds.CollidesWith(swatter.Bounds))
+							{
+								swatter.Color = Color.Red;
+								fly.Dead = true;
+								fliesLeft--;
+								flyHit.Play();
+							}
+						}
+					}
+					if (inputManager.Play)
+					{
+						curScreen = ScreenState.Title;
+						foreach (var fly in flies) fly.Dead = false;
+						fliesLeft = flies.Length;
+					}
+					break;
 			}
 
 			base.Update(gameTime);
@@ -80,11 +129,31 @@ namespace GameDevGame2
 
 			// TODO: Add your drawing code here
 			spriteBatch.Begin();
-			foreach (var fly in flies)
+			switch (curScreen)
 			{
-				fly.Draw(gameTime, spriteBatch);
+				case ScreenState.Title:
+					spriteBatch.DrawString(spriteFont, "This is a Video Game", new Vector2(2, 200), Color.DarkSlateGray);
+					spriteBatch.DrawString(spriteFont, "Press space to start", new Vector2(2, 300), Color.DarkSlateGray);
+					break;
+				case ScreenState.HowToPlay:
+					spriteBatch.DrawString(spriteFont, "Click all the flies!", new Vector2(2, 200), Color.DarkSlateGray);
+					spriteBatch.DrawString(spriteFont, "To return to the menu, press Space", new Vector2(2, 300), Color.DarkSlateGray);
+					break;
+				case ScreenState.Game:
+					foreach (var fly in flies)
+					{
+						fly.Draw(gameTime, spriteBatch);
+					}
+					if (fliesLeft == 0)
+					{
+						spriteBatch.DrawString(spriteFont, "YOU WIN!", new Vector2(350, 2), Color.Gold);
+						spriteBatch.DrawString(spriteFont, "Press space to play again", new Vector2(350, 70), Color.DarkSlateGray);
+					}
+					swatter.Draw(gameTime, spriteBatch);
+					spriteBatch.DrawString(spriteFont, $"Flies left: {fliesLeft}", new Vector2(2, 2), Color.DarkSlateGray);
+					break;
 			}
-			swatter.Draw(gameTime, spriteBatch);
+
 			spriteBatch.End();
 			base.Draw(gameTime);
 		}
