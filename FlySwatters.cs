@@ -28,6 +28,7 @@ namespace GameDevGame2
 		private int fliesLeft;
 		private ScreenState curScreen = ScreenState.Title;
 		private double instructTimer = 0;
+		private KillParticleSystem fireworks;
 		public FlySwatters()
 		{
 			graphics = new GraphicsDeviceManager(this);
@@ -52,6 +53,11 @@ namespace GameDevGame2
 			swatter = new Swatter();
 			inputManager = new InputManager();
 			fliesLeft = flies.Length;
+
+
+			fireworks = new KillParticleSystem(this, 20);
+			Components.Add(fireworks);
+
 			base.Initialize();
 		}
 
@@ -108,6 +114,7 @@ namespace GameDevGame2
 								fly.Dead = true;
 								fliesLeft--;
 								flyHit.Play();
+								fireworks.PlaceFirework(new Vector2(fly.Position.X + 32, fly.Position.Y + 32));
 							}
 						}
 					}
@@ -125,7 +132,7 @@ namespace GameDevGame2
 
 		protected override void Draw(GameTime gameTime)
 		{
-			GraphicsDevice.Clear(Color.CornflowerBlue);
+			GraphicsDevice.Clear(Color.Gray);
 
 			// TODO: Add your drawing code here
 			spriteBatch.Begin();

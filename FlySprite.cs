@@ -21,9 +21,9 @@ namespace GameDevGame2
 		private short animationFrame;
 		private Vector2 velocity;
 		private int deadOrAlive = 0;
-		private Vector2 Position;
 		private BoundingCircle bounds;
 
+		public Vector2 Position { get; private set; }
 		public bool Dead { get; set; } = false;
 		/// <summary>
 		/// The bounding volume of the sprite
