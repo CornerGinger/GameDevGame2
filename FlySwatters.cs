@@ -143,7 +143,7 @@ namespace GameDevGame2
 			{
 				shakeTime += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
 				shakeTransform = Matrix.CreateTranslation(2 * MathF.Sin(shakeTime), 2 * MathF.Cos(shakeTime), 0);
-				if (shakeTime > 500) shaking = false;
+				if (shakeTime > 250) shaking = false;
 			}
 
 			// TODO: Add your drawing code here
