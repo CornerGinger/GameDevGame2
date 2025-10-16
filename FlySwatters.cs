@@ -29,6 +29,8 @@ namespace GameDevGame2
 		private ScreenState curScreen = ScreenState.Title;
 		private double instructTimer = 0;
 		private KillParticleSystem fireworks;
+		private bool shaking = false;
+		private float shakeTime; 
 		public FlySwatters()
 		{
 			graphics = new GraphicsDeviceManager(this);
@@ -115,6 +117,8 @@ namespace GameDevGame2
 								fliesLeft--;
 								flyHit.Play();
 								fireworks.PlaceFirework(new Vector2(fly.Position.X + 32, fly.Position.Y + 32));
+								shakeTime = 0;
+								shaking = true;
 							}
 						}
 					}
@@ -134,8 +138,16 @@ namespace GameDevGame2
 		{
 			GraphicsDevice.Clear(Color.Gray);
 
+			Matrix shakeTransform = Matrix.Identity;
+			if (shaking)
+			{
+				shakeTime += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+				shakeTransform = Matrix.CreateTranslation(2 * MathF.Sin(shakeTime), 2 * MathF.Cos(shakeTime), 0);
+				if (shakeTime > 500) shaking = false;
+			}
+
 			// TODO: Add your drawing code here
-			spriteBatch.Begin();
+			spriteBatch.Begin(transformMatrix: shakeTransform);
 			switch (curScreen)
 			{
 				case ScreenState.Title:
