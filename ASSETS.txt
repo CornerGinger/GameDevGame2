@@ -4,3 +4,4 @@ Music- "FIGHTING" by me
 SFX- Made by me using bfxr
 Fly and Swatter sprite- made by me using Paint
 Kill effect- Using "circle" by Nathan Bean
+Tileset- also made by me
