@@ -56,7 +56,7 @@ namespace GameDevGame2
 			particle.Scale = .75f + .25f * normalizedLifetime;
 		}
 
-		public void PlaceFirework(Vector2 where)
+		public void PlaceKillParticle(Vector2 where)
 		{
 			color = colors[RandomHelper.Next(colors.Length)];
 			AddParticles(where);
