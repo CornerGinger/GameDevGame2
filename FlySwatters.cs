@@ -23,6 +23,7 @@ namespace GameDevGame2
 	}
     public class FlySwatters : Game
     {
+		private Random random = new Random();
 		private GraphicsDeviceManager graphics;
 		private SpriteBatch spriteBatch;
 		private FlySprite[] flies;
@@ -48,6 +49,14 @@ namespace GameDevGame2
 
 		private Tilemap _tilemap;
 
+
+		private Cube cube;
+		private double cubeTime;
+		private double cubeSpawn;
+		private bool cubeVisible;
+		private bool cubeHit = false;
+
+
 		public FlySwatters()
 		{
 			graphics = new GraphicsDeviceManager(this);
@@ -58,7 +67,6 @@ namespace GameDevGame2
 		protected override void Initialize()
 		{
 			// TODO: Add your initialization logic here
-			Random random = new Random();
 			flies = new FlySprite[] {
 				new FlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
 				new FlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
@@ -89,6 +97,10 @@ namespace GameDevGame2
 
 			_tilemap = new Tilemap("map.txt");
 
+			// Create the cube
+			cube = new Cube(this);
+			cubeSpawn = random.NextDouble() * 4f + 1f;
+
 			base.Initialize();
 		}
 
@@ -115,7 +127,6 @@ namespace GameDevGame2
 			// TODO: Add your update logic here
 			inputManager.Update(gameTime);
 			if (inputManager.Exit) Exit();
-
 			switch (curScreen)
 			{
 				case ScreenState.Title:
@@ -159,7 +170,32 @@ namespace GameDevGame2
 							}
 						}
 					}
-					if (fliesLeft == 0 & !lvlComplete)
+					if (!cubeVisible)
+					{
+						cubeTime += gameTime.ElapsedGameTime.TotalSeconds;
+
+						if (cubeTime >= cubeSpawn)
+						{
+							cubeVisible = true;
+							cubeTime = 0;
+							cubeSpawn = random.NextDouble();
+
+							cube.Position = new Vector3(
+								random.Next(-4, 5),
+								random.Next(-4, 5),
+								random.Next(-4, 5)
+							);
+						}
+					}
+					if (cubeVisible)
+					{ 
+						cube.Update(gameTime);
+						if (cube.Bounds.CollidesWith(swatter.Bounds))
+						{
+							cubeHit = true;
+						}
+					}
+					if (fliesLeft == 0 && !lvlComplete)
 					{
 						SaveTimeIfBest(elapsedTime);
 						lvlComplete = true;
@@ -191,6 +227,7 @@ namespace GameDevGame2
 
 			// TODO: Add your drawing code here
 			spriteBatch.Begin(transformMatrix: shakeTransform);
+
 			switch (curScreen)
 			{
 				case ScreenState.Title:
@@ -203,28 +240,48 @@ namespace GameDevGame2
 					break;
 				case ScreenState.Level1:
 					_tilemap.Draw(gameTime, spriteBatch);
+
 					foreach (var fly in flies)
-					{
 						fly.Draw(gameTime, spriteBatch);
-					}
+
 					if (fliesLeft == 0)
 					{
 						spriteBatch.DrawString(spriteFont, "YOU WIN!", new Vector2(350, 2), Color.Gold);
 						spriteBatch.DrawString(spriteFont, "Press space to play again", new Vector2(350, 70), Color.DarkSlateGray);
+
 						if (newRecord)
-						{
 							spriteBatch.DrawString(spriteFont, "New record!", new Vector2(10, 150), Color.Red);
-						}
 					}
-					swatter.Draw(gameTime, spriteBatch);
+
 					spriteBatch.DrawString(spriteFont, $"Flies left: {fliesLeft}", new Vector2(10, 5), Color.DarkSlateGray);
+
 					TimeSpan span = TimeSpan.FromSeconds(elapsedTime);
 					spriteBatch.DrawString(spriteFont, $"{span.Seconds:D2}:{span.Milliseconds:D2}", new Vector2(10, 50), Color.DarkSlateGray);
+
 					spriteBatch.DrawString(spriteFont, $"Best: {bestTimeString}", new Vector2(10, 100), Color.Gold);
 					break;
 			}
 
 			spriteBatch.End();
+
+			// draw 3D elements (the cube)
+			if (curScreen == ScreenState.Level1 && cubeVisible)
+			{
+				GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+				if (!cubeHit)
+				{
+					cube.Draw();
+				}
+			}
+
+			// Draw cursor over cube
+			spriteBatch.Begin(transformMatrix: shakeTransform);
+			if (curScreen == ScreenState.Level1)
+			{
+				swatter.Draw(gameTime, spriteBatch);
+			}
+			spriteBatch.End();
+
 			base.Draw(gameTime);
 		}
 
