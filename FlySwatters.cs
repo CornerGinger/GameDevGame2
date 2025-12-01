@@ -50,13 +50,6 @@ namespace GameDevGame2
 		private Tilemap _tilemap;
 
 
-		private Cube cube;
-		private double cubeTime;
-		private double cubeSpawn;
-		private bool cubeVisible;
-		private bool cubeHit = false;
-
-
 		public FlySwatters()
 		{
 			graphics = new GraphicsDeviceManager(this);
@@ -96,10 +89,6 @@ namespace GameDevGame2
 			Components.Add(flyDeath);
 
 			_tilemap = new Tilemap("map.txt");
-
-			// Create the cube
-			cube = new Cube(this);
-			cubeSpawn = random.NextDouble() * 4f + 1f;
 
 			base.Initialize();
 		}
@@ -168,31 +157,6 @@ namespace GameDevGame2
 								shakeTime = 0;
 								shaking = true;
 							}
-						}
-					}
-					if (!cubeVisible)
-					{
-						cubeTime += gameTime.ElapsedGameTime.TotalSeconds;
-
-						if (cubeTime >= cubeSpawn)
-						{
-							cubeVisible = true;
-							cubeTime = 0;
-							cubeSpawn = random.NextDouble();
-
-							cube.Position = new Vector3(
-								random.Next(-4, 5),
-								random.Next(-4, 5),
-								random.Next(-4, 5)
-							);
-						}
-					}
-					if (cubeVisible)
-					{ 
-						cube.Update(gameTime);
-						if (cube.Bounds.CollidesWith(swatter.Bounds))
-						{
-							cubeHit = true;
 						}
 					}
 					if (fliesLeft == 0 && !lvlComplete)
@@ -264,17 +228,6 @@ namespace GameDevGame2
 
 			spriteBatch.End();
 
-			// draw 3D elements (the cube)
-			if (curScreen == ScreenState.Level1 && cubeVisible)
-			{
-				GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-				if (!cubeHit)
-				{
-					cube.Draw();
-				}
-			}
-
-			// Draw cursor over cube
 			spriteBatch.Begin(transformMatrix: shakeTransform);
 			if (curScreen == ScreenState.Level1)
 			{
