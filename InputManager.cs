@@ -31,6 +31,11 @@ namespace GameDevGame2
 		public bool Play { get; private set; } = false;
 
 		/// <summary>
+		/// If the menu functionality has been requested
+		/// </summary>
+		public bool ToMenu { get; private set; } = false;
+
+		/// <summary>
 		/// If the user has requested the game end 
 		/// </summary>
 		public bool Exit { get; private set; } = false;
@@ -82,10 +87,17 @@ namespace GameDevGame2
 
 			#region Play Input
 			Play = false;
-			if (currentKeyboardState.IsKeyDown(Keys.Space) &&
-				priorKeyboardState.IsKeyUp(Keys.Space))
+			if (currentMouseState.LeftButton == ButtonState.Pressed &&
+				priorMouseState.LeftButton == ButtonState.Released)
 			{
 				Play = true;
+			}
+
+			ToMenu = false;
+			if (priorKeyboardState.IsKeyUp(Keys.Space) &&
+				currentKeyboardState.IsKeyDown(Keys.Space))
+			{
+				ToMenu = true;
 			}
 
 			#endregion

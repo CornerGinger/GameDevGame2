@@ -22,6 +22,10 @@ namespace GameDevGame2
 		private Vector2 velocity;
 		private int deadOrAlive = 0;
 		private BoundingCircle bounds;
+		private Color tint = Color.White;
+
+		private int clickCount = 0;
+		private float speedMultiplier = 1f;
 
 		public Vector2 Position { get; private set; }
 		public bool Dead { get; set; } = false;
@@ -45,7 +49,7 @@ namespace GameDevGame2
 		public SuperFlySprite(Vector2 position)
 		{
 			this.Position = position;
-			this.bounds = new BoundingCircle(position - new Vector2(-32,-32), 32);
+			this.bounds = new BoundingCircle(position - new Vector2(-32 * 1.5f, -32 * 1.5f), 32 * 1.5f);
 		}
 
 		/// <summary>
@@ -71,7 +75,7 @@ namespace GameDevGame2
 			}
 			else
 			{
-				Position += Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+				Position += Velocity * speedMultiplier * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
 				if (Position.X < graphics.GraphicsDevice.Viewport.X || Position.X > graphics.GraphicsDevice.Viewport.Width - 64)
 				{
@@ -108,7 +112,7 @@ namespace GameDevGame2
 				animationTimer -= 0.3;
 			}
 			var source = new Rectangle(64 * animationFrame, 64 * deadOrAlive, 64, 64);
-			spriteBatch.Draw(texture, Position, source, Color.White);
+			spriteBatch.Draw(texture, Position, source, tint, 0f, Vector2.Zero, 1.25f, SpriteEffects.None, 0f);
 		}
 
 		public Vector2 FixVelocity(Vector2 vel)
@@ -116,6 +120,34 @@ namespace GameDevGame2
 			vel.Normalize();
 			vel *= 100;
 			return vel;
+		}
+
+		public void HandleClick()
+		{
+			if (Dead) return;
+
+			clickCount++;
+
+			if (clickCount == 1)
+			{
+				speedMultiplier = 3f;
+				tint = Color.Red;
+				deadOrAlive = 0;
+			}
+			else if (clickCount >= 2)
+			{
+				Dead = true;
+				tint = Color.White;
+				deadOrAlive = 1;
+			}
+		}
+
+		public void Reset()
+		{
+			Dead = false;
+			clickCount = 0;
+			speedMultiplier = 1f;
+			tint = Color.White;
 		}
 	}
 }

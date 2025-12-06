@@ -14,11 +14,10 @@ namespace GameDevGame2
 	public enum ScreenState
 	{
 		Title,
+		Pause,
 		HowToPlay,
 		Level1,
-		//onToLevel2,
-		//Level2,
-		//onToLevel3,
+		Level2,
 		//Level3,
 	}
     public class FlySwatters : Game
@@ -36,7 +35,7 @@ namespace GameDevGame2
 		private SpriteFont spriteFont;
 		private string filePath = "saveData.json";
 		private string bestTimeString = "00:00";
-		// private int superFliesLeft;
+		private int superFliesLeft;
 		private int fliesLeft;
 		private double elapsedTime;
 		private ScreenState curScreen = ScreenState.Title;
@@ -70,19 +69,18 @@ namespace GameDevGame2
 				new FlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
 				new FlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
 			};
-			/*
+			
 			superFlies = new SuperFlySprite[] {
-				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble() * 3.0f,(float) random.NextDouble()) * 3.0f },
-				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble() * 3.0f,(float) random.NextDouble()) * 3.0f },
-				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble() * 3.0f,(float) random.NextDouble()) * 3.0f },
-				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble() * 3.0f,(float) random.NextDouble()) * 3.0f },
+				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
+				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
+				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
+				new SuperFlySprite(new Vector2((float)random.NextDouble() * (GraphicsDevice.Viewport.Width - 64), (float)random.NextDouble() * (GraphicsDevice.Viewport.Height - 64))) { Velocity = new Vector2((float) random.NextDouble(),(float) random.NextDouble()) },
 			};
-			*/
-
+			
 			swatter = new Swatter();
 			inputManager = new InputManager();
 			fliesLeft = flies.Length;
-			//superFliesLeft = superFlies.Length;
+			superFliesLeft = superFlies.Length;
 
 
 			flyDeath = new KillParticleSystem(this, 20);
@@ -97,6 +95,7 @@ namespace GameDevGame2
 		{
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 			foreach (var fly in flies) fly.LoadContent(Content);
+			foreach (var sFly in superFlies) sFly.LoadContent(Content);
 			swatter.LoadContent(Content);
 			flyHit = Content.Load<SoundEffect>("Boom3");
 			backgroundMusic = Content.Load<Song>("FIGHTING");
@@ -104,16 +103,12 @@ namespace GameDevGame2
 			MediaPlayer.IsRepeating = true;
 			MediaPlayer.Volume = 0.7f;
 			MediaPlayer.Play(backgroundMusic);
-			// TODO: use this.Content to load your game content here
 			LoadBestTime();
 			_tilemap.LoadContent(Content);
 		}
 
 		protected override void Update(GameTime gameTime)
 		{
-
-
-			// TODO: Add your update logic here
 			inputManager.Update(gameTime);
 			if (inputManager.Exit) Exit();
 			switch (curScreen)
@@ -129,7 +124,7 @@ namespace GameDevGame2
 					break;
 				case ScreenState.HowToPlay:
 					instructTimer += gameTime.ElapsedGameTime.TotalSeconds;
-					if (instructTimer > 2.0)
+					if (inputManager.Play)
 					{
 						curScreen = ScreenState.Level1;
 					}
@@ -161,16 +156,77 @@ namespace GameDevGame2
 					}
 					if (fliesLeft == 0 && !lvlComplete)
 					{
-						SaveTimeIfBest(elapsedTime);
+						//SaveTimeIfBest(elapsedTime);
 						lvlComplete = true;
 					}
-					if (inputManager.Play)
+					else if (lvlComplete && inputManager.Play)
+					{
+						curScreen = ScreenState.Level2;
+						lvlComplete = false;
+						elapsedTime = 0;
+
+						ResetLevel2();
+					}
+					if (inputManager.ToMenu)
 					{
 						curScreen = ScreenState.Title;
 						foreach (var fly in flies) fly.Dead = false;
 						fliesLeft = flies.Length;
 					}
 					break;
+				case ScreenState.Level2:
+					elapsedTime += gameTime.ElapsedGameTime.TotalSeconds;
+					foreach (var sFly in superFlies) sFly.Update(gameTime, graphics);
+					swatter.Update(gameTime, inputManager);
+					swatter.Color = Color.White;
+
+					if (inputManager.Swat)
+					{
+						swat = Content.Load<SoundEffect>("Hit6");
+
+						foreach (var sFly in superFlies)
+						{
+							if (!sFly.Dead && sFly.Bounds.CollidesWith(swatter.Bounds))
+							{
+								swatter.Color = Color.Red;
+								sFly.HandleClick();
+								flyHit.Play();
+								flyDeath.PlaceKillParticle(new Vector2(sFly.Position.X + 32, sFly.Position.Y + 32));
+								shakeTime = 0;
+								shaking = true;
+							}
+						}
+					}
+
+					bool allDead = true;
+					foreach (var sFly in superFlies)
+					{
+						if (!sFly.Dead)
+						{
+							allDead = false;
+							break;
+						}
+					}
+
+					if (allDead)
+					{
+						lvlComplete = true;
+						// You could eventually SaveTimeIfBest(elapsedTime) here if Level 2 is timed
+					}
+
+					if (inputManager.ToMenu)
+					{
+						curScreen = ScreenState.Title;
+						ResetLevel1();
+						ResetLevel2();
+
+						elapsedTime = 0;
+						lvlComplete = false;
+						shaking = false;
+					}
+					break;
+
+
 			}
 
 			base.Update(gameTime);
@@ -196,12 +252,14 @@ namespace GameDevGame2
 			{
 				case ScreenState.Title:
 					spriteBatch.DrawString(spriteFont, "Fly Swatters", new Vector2(2, 200), Color.DarkSlateGray);
-					spriteBatch.DrawString(spriteFont, "Press space to start", new Vector2(2, 300), Color.DarkSlateGray);
+					spriteBatch.DrawString(spriteFont, "Click to start", new Vector2(2, 300), Color.DarkSlateGray);
 					break;
+
 				case ScreenState.HowToPlay:
 					spriteBatch.DrawString(spriteFont, "Click all the flies!", new Vector2(2, 200), Color.DarkSlateGray);
-					spriteBatch.DrawString(spriteFont, "To return to the menu, press Space", new Vector2(2, 300), Color.DarkSlateGray);
+					spriteBatch.DrawString(spriteFont, "Click to play. To return to the menu, press Space", new Vector2(2, 300), Color.DarkSlateGray);
 					break;
+
 				case ScreenState.Level1:
 					_tilemap.Draw(gameTime, spriteBatch);
 
@@ -210,29 +268,49 @@ namespace GameDevGame2
 
 					if (fliesLeft == 0)
 					{
-						spriteBatch.DrawString(spriteFont, "YOU WIN!", new Vector2(350, 2), Color.Gold);
-						spriteBatch.DrawString(spriteFont, "Press space to play again", new Vector2(350, 70), Color.DarkSlateGray);
-
-						if (newRecord)
-							spriteBatch.DrawString(spriteFont, "New record!", new Vector2(10, 150), Color.Red);
+						spriteBatch.DrawString(spriteFont, "YOU WIN LEVEL 1!", new Vector2(350, 2), Color.Gold);
+						spriteBatch.DrawString(spriteFont, "Click to go to Level 2", new Vector2(350, 70), Color.DarkSlateGray);
 					}
 
 					spriteBatch.DrawString(spriteFont, $"Flies left: {fliesLeft}", new Vector2(10, 5), Color.DarkSlateGray);
 
-					TimeSpan span = TimeSpan.FromSeconds(elapsedTime);
-					spriteBatch.DrawString(spriteFont, $"{span.Seconds:D2}:{span.Milliseconds:D2}", new Vector2(10, 50), Color.DarkSlateGray);
+					TimeSpan span1 = TimeSpan.FromSeconds(elapsedTime);
+					spriteBatch.DrawString(spriteFont, $"{span1.Seconds:D2}:{span1.Milliseconds:D2}", new Vector2(10, 50), Color.DarkSlateGray);
 
 					spriteBatch.DrawString(spriteFont, $"Best: {bestTimeString}", new Vector2(10, 100), Color.Gold);
 					break;
+
+				case ScreenState.Level2:
+					_tilemap.Draw(gameTime, spriteBatch);
+
+					foreach (var sFly in superFlies) sFly.Draw(gameTime, spriteBatch);
+
+					superFliesLeft = 0;
+					foreach (var sFly in superFlies)
+						if (!sFly.Dead) superFliesLeft++;
+
+					spriteBatch.DrawString(spriteFont, $"Super flies left: {superFliesLeft}", new Vector2(10, 5), Color.DarkSlateGray);
+
+					if (lvlComplete)
+					{
+						spriteBatch.DrawString(spriteFont, "YOU WIN LEVEL 2!", new Vector2(350, 2), Color.Gold);
+						spriteBatch.DrawString(spriteFont, "Press Space to return to menu", new Vector2(350, 70), Color.DarkSlateGray);
+					}
+
+					TimeSpan span2 = TimeSpan.FromSeconds(elapsedTime);
+					spriteBatch.DrawString(spriteFont, $"{span2.Seconds:D2}:{span2.Milliseconds:D2}", new Vector2(10, 50), Color.DarkSlateGray);
+					break;
 			}
+
 
 			spriteBatch.End();
 
 			spriteBatch.Begin(transformMatrix: shakeTransform);
-			if (curScreen == ScreenState.Level1)
+			if (curScreen == ScreenState.Level1 || curScreen == ScreenState.Level2)
 			{
 				swatter.Draw(gameTime, spriteBatch);
 			}
+
 			spriteBatch.End();
 
 			base.Draw(gameTime);
@@ -295,5 +373,22 @@ namespace GameDevGame2
 					bestTimeString = formatted.GetString();
 			}
 		}
+
+		private void ResetLevel1()
+		{
+			foreach (var fly in flies)
+				fly.Dead = false;
+
+			fliesLeft = flies.Length;
+		}
+
+		private void ResetLevel2()
+		{
+			foreach (var sFly in superFlies)
+				sFly.Reset();      // uses SuperFlySprite.Reset()
+
+			superFliesLeft = superFlies.Length;
+		}
+
 	}
 }
