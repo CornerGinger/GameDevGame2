@@ -1,5 +1,4 @@
-﻿using GameDevGame1.Collisions;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,7 +14,7 @@ namespace GameDevGame2
 	public class Swatter
 	{
 		private Texture2D texture;
-		private BoundingRectangle bounds = new BoundingRectangle(new Vector2(200 - 32, 200 - 32), 64, 32);
+		private BoundingRectangle bounds = new BoundingRectangle(new Vector2(200 + 32, 200 + 32), 64, 32);
 
 
 		/// <summary>
@@ -49,9 +48,17 @@ namespace GameDevGame2
 		public void Update(GameTime gameTime, InputManager manager)
 		{
 			Position = manager.Direction;
-			bounds.X = Position.X;
-			bounds.Y = Position.Y;
+
+			bounds.Width = 48;
+			bounds.Height = 48;
+
+			Vector2 headOffset = new Vector2(0, -10);  // up a bit
+			Vector2 hitCenter = Position + headOffset;
+
+			bounds.X = hitCenter.X - bounds.Width / 2f;
+			bounds.Y = hitCenter.Y - bounds.Height / 2f;
 		}
+
 
 		/// <summary>
 		/// Draws the animated sprite
@@ -61,7 +68,10 @@ namespace GameDevGame2
 		public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
 		{
 			var source = new Rectangle(0, 0, 64, 64);
-			spriteBatch.Draw(texture, Position, source, Color, 0f, new Vector2(48, 48), 1.5f, SpriteEffects.None, 0);
+			float scale = 1.5f;
+			Vector2 origin = new Vector2(32, 32);
+
+			spriteBatch.Draw(texture, Position, source, Color, 0f, origin, scale, SpriteEffects.None, 0);
 		}
 	}
 }

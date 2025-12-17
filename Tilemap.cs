@@ -87,23 +87,26 @@ namespace GameDevGame2
 			}
 		}
 
-		public void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+		public void Draw(GameTime gameTime, SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
 		{
-			for (int y = 0; y < _mapHeight; y++)
+			int screenW = graphicsDevice.Viewport.Width;
+			int screenH = graphicsDevice.Viewport.Height;
+
+			int tilesAcross = screenW / _tileWidth + 1;
+			int tilesDown = screenH / _tileHeight + 1;
+
+			for (int y = 0; y < tilesDown; y++)
 			{
-				for (int x = 0; x < _mapWidth; x++)
+				for (int x = 0; x < tilesAcross; x++)
 				{
-					int index = _map[y * _mapWidth + x] - 1;
-					if (index == -1) continue;
-					spriteBatch.Draw(
-						_tilesetTexture,
-						new Vector2(
-							x * _tileWidth,
-							y * _tileHeight
-							),
-						_tiles[index],
-						Color.White
-						);
+					int mapX = x % _mapWidth;
+					int mapY = y % _mapHeight;
+
+					int tileIndex = _map[mapY * _mapWidth + mapX] - 1;
+					if (tileIndex < 0) continue;
+
+					spriteBatch.Draw(_tilesetTexture, new Vector2(x * _tileWidth, y * _tileHeight), _tiles[tileIndex], Color.White
+					);
 				}
 			}
 		}

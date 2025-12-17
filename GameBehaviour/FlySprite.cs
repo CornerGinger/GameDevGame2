@@ -1,5 +1,4 @@
-﻿using GameDevGame1.Collisions;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -14,18 +13,16 @@ namespace GameDevGame2
 	/// <summary>
 	/// A class representing the bat sprite
 	/// </summary>
-	public class SuperFlySprite
+	public class FlySprite
 	{
 		private Texture2D texture;
 		private double animationTimer;
 		private short animationFrame;
 		private Vector2 velocity;
-		private int deadOrAlive = 0;
 		private BoundingCircle bounds;
-		private Color tint = Color.White;
 
-		private int clickCount = 0;
-		private float speedMultiplier = 1f;
+		private const float HitRadius = 18f;
+		private static readonly Vector2 HitCenterOffset = new Vector2(32, 32);
 
 		public Vector2 Position { get; private set; }
 		public bool Dead { get; set; } = false;
@@ -46,10 +43,10 @@ namespace GameDevGame2
 			}
 		}
 
-		public SuperFlySprite(Vector2 position)
+		public FlySprite(Vector2 position)
 		{
 			this.Position = position;
-			this.bounds = new BoundingCircle(position - new Vector2(-32 * 1.5f, -32 * 1.5f), 32 * 1.5f);
+			this.bounds = new BoundingCircle(position + HitCenterOffset, HitRadius);
 		}
 
 		/// <summary>
@@ -70,12 +67,10 @@ namespace GameDevGame2
 			if (Dead)
 			{
 				return;
-				//Velocity = new Vector2(0, 0);
-				//deadOrAlive = 1;
 			}
 			else
 			{
-				Position += Velocity * speedMultiplier * (float)gameTime.ElapsedGameTime.TotalSeconds;
+				Position += Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
 				if (Position.X < graphics.GraphicsDevice.Viewport.X || Position.X > graphics.GraphicsDevice.Viewport.Width - 64)
 				{
@@ -85,9 +80,8 @@ namespace GameDevGame2
 				{
 					velocity.Y *= -1;
 				}
-				deadOrAlive = 0;
 			}
-			bounds.Center = Position - new Vector2(-48, -48);
+			bounds.Center = Position + HitCenterOffset;
 		}
 
 		/// <summary>
@@ -111,8 +105,8 @@ namespace GameDevGame2
 				if (animationFrame > 3) animationFrame = 0;
 				animationTimer -= 0.3;
 			}
-			var source = new Rectangle(64 * animationFrame, 64 * deadOrAlive, 64, 64);
-			spriteBatch.Draw(texture, Position, source, tint, 0f, Vector2.Zero, 1.25f, SpriteEffects.None, 0f);
+			var source = new Rectangle(64 * animationFrame, 0, 64, 64);
+			spriteBatch.Draw(texture, Position, source, Color.White);
 		}
 
 		public Vector2 FixVelocity(Vector2 vel)
@@ -120,34 +114,6 @@ namespace GameDevGame2
 			vel.Normalize();
 			vel *= 100;
 			return vel;
-		}
-
-		public void HandleClick()
-		{
-			if (Dead) return;
-
-			clickCount++;
-
-			if (clickCount == 1)
-			{
-				speedMultiplier = 3f;
-				tint = Color.Red;
-				deadOrAlive = 0;
-			}
-			else if (clickCount >= 2)
-			{
-				Dead = true;
-				tint = Color.White;
-				deadOrAlive = 1;
-			}
-		}
-
-		public void Reset()
-		{
-			Dead = false;
-			clickCount = 0;
-			speedMultiplier = 1f;
-			tint = Color.White;
 		}
 	}
 }

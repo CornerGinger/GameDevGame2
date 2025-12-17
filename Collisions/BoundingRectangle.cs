@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameDevGame1.Collisions
+namespace GameDevGame2
 {
 	/// <summary>
 	/// A bounding rectangle for collision detection

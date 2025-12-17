@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameDevGame1.Collisions
+namespace GameDevGame2
 {
 	public static class CollisionHelper
 	{

@@ -5,8 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace GameDevGame1.Collisions
-{
+namespace GameDevGame2 {
 	/// <summary>
 	/// A struct representing circular bounds
 	/// </summary>
